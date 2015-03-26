@@ -90,6 +90,13 @@ transition('error_diagnosis', 'safe_shutdown', shutdown, 'retry >= 3', null).
 transition('safe_shutdown', dormant, sleep, null, null).
 transition(dormant, exit, kill, null, null).
 
+%% init
+
+transition('boot_hw', senchk, 'hw_ok', 'load hardware modules', null).
+transition(senchk, tchk, 'sen_ok', 'sensors are ok', null).
+transition(tchk, psichk, 't_ok', 'temperature sensors are ok', null).
+transition(psichk, ready, 'psi_ok', 'pressure sensors are ok', null).
+
 
 
 
