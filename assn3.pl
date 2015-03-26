@@ -96,6 +96,7 @@ transition('boot_hw', senchk, 'hw_ok', 'load hardware modules', null).
 transition(senchk, tchk, 'sen_ok', 'sensors are ok', null).
 transition(tchk, psichk, 't_ok', 'temperature sensors are ok', null).
 transition(psichk, ready, 'psi_ok', 'pressure sensors are ok', null).
+transition(ready, exit, null, null,null).
 
 %% monitor
 
@@ -104,6 +105,23 @@ transition(monidle, 'regulate_environment', 'no_contagion', 'after(1000ms); !has
 transition('regulate_environment', monidle, 'after(100ms)', null, null).
 transition(lockdown, lockdown, null, 'inLockdown', null).
 transition(lockdown, monidle, 'purge_succ', '!hasContagion', 'inLockdown = false'). 
+
+%% lockdown
+
+transition('prep_vpurge', 'alt_psi', 'initiate_purge', null, 'lock_doors').
+transition('prep_vpurge', 'alt_temp', 'initiate_purge', null, 'lock_doors').
+transition('alt_psi', 'risk_assess', 'psicyc_comp', null, null).
+transition('alt_temp', 'risk_assess', 'tcyc_comp', null, null).
+transition('risk_assess', 'safe_status', null, 'risk < 0.01', 'unlock_doors').
+transition('risk_assess', 'prep_vpurge', null, 'risk >= 0.01', null).
+transition('safe_status', exit, null, null,null).
+
+%% error_diagnosis
+
+transition('error_rcv', 'applicable_rescue', null, 'err_protocol_def', null).
+transition('error_rcv', 'reset_module_data', null, '!err_protocol_def', 'reset kernel module data').
+transition('reset_module_data', exit, 'reset_to_stable', null, null).
+transition('applicable_rescue', exit, 'apply_protocol_rescue', null, null).
 
 
 
