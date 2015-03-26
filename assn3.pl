@@ -97,6 +97,13 @@ transition(senchk, tchk, 'sen_ok', 'sensors are ok', null).
 transition(tchk, psichk, 't_ok', 'temperature sensors are ok', null).
 transition(psichk, ready, 'psi_ok', 'pressure sensors are ok', null).
 
+%% monitor
+
+transition(monidle, lockdown, 'contagion_alert', 'after(1000ms); hasContagion', 'FACILITY_ERR_MSG ; inLockdown = true').
+transition(monidle, 'regulate_environment', 'no_contagion', 'after(1000ms); !hasContagion', null).
+transition('regulate_environment', monidle, 'after(100ms)', null, null).
+transition(lockdown, lockdown, null, 'inLockdown', null).
+transition(lockdown, monidle, 'purge_succ', '!hasContagion', 'inLockdown = false'). 
 
 
 
