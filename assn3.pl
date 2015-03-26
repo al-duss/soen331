@@ -73,4 +73,8 @@ superstate(lockdown, 'risk_assess').
 superstate(lockdown, 'safe_status').
 
 
+%% ===transition(initial_state, final_state, guard, event, action).===
+
+
+
 
