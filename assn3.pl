@@ -1,4 +1,6 @@
-%% =========RULES================
+%% =======================================
+%%             FACTS
+%% =======================================
 
 %% =========STATES=============== 
 
@@ -122,6 +124,43 @@ transition('error_rcv', 'applicable_rescue', null, 'err_protocol_def', null).
 transition('error_rcv', 'reset_module_data', null, '!err_protocol_def', 'reset kernel module data').
 transition('reset_module_data', exit, 'reset_to_stable', null, null).
 transition('applicable_rescue', exit, 'apply_protocol_rescue', null, null).
+
+%% =======================================
+%%             RULES
+%% =======================================
+
+
+is_loop(Event,Guard):- transition(A, A, Event, Guard, _), Event not null, Guard not null.
+
+all_loops(Set):- findall([Event, Guard], is_loop(Event, Guard), lst), list_to_set(lst, Set).
+
+is_edge(Event, Guard):- transition(X,Y, Event, Guard, _).
+
+size(Length):- aggregate_all(Count, transition(_,_,_,_,_), Length).
+
+is_link(Event, Guard):- transition(_,_, Event, Guard, _).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
