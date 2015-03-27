@@ -129,23 +129,43 @@ transition('applicable_rescue', exit, 'apply_protocol_rescue', null, null).
 %%             RULES
 %% =======================================
 
+%% is_loop(Event,Guard):- transition(A, A, Event, Guard, _), Event\=='null', Guard\=='null'.
 
-is_loop(Event,Guard):- transition(A, A, Event, Guard, _), Event not null, Guard not null.
+%% all_loops(Set):- findall([Event, Guard], is_loop(Event, Guard), lst), list_to_set(lst, Set).
 
-all_loops(Set):- findall([Event, Guard], is_loop(Event, Guard), lst), list_to_set(lst, Set).
-
-is_edge(Event, Guard):- transition(X,Y, Event, Guard, _).
+%% Same as is_link???
+is_edge(Event, Guard):- transition(_,_, Event, Guard, _).
 
 size(Length):- aggregate_all(Count, transition(_,_,_,_,_), Length).
 
+%% same as is_edge???
 is_link(Event, Guard):- transition(_,_, Event, Guard, _).
 
+all_superstates(Set):- findall(Initial, superstate(Initial, _), List), list_to_set(List, Set).
 
+ancestor(Ancestor, Descendant):- transition(Ancestor, Descendant, _, _, _).
 
+%% inheritss_transitions(State,List):-
 
+all_states(Set):- findall(Current, state(Current), List), list_to_set(List, Set).
 
+all_init_states(Set):- findall(Current, initial_state(Current), List), list_to_set(List, Set).
 
+%% get_starting_state(State)
 
+%% state_is_reflexive(State)
+
+%% graph_is_reflexive()
+
+get_guards(Ret) :- findall(Guard, transition(_, _, _, Guard, _), List), list_to_set(List, Ret).
+
+get_events(Ret) :- findall(Event, transition(_, _, Event, _, _), List), list_to_set(List, Ret).
+
+get_actions(Ret) :- findall(Action, transition(_, _, _, _, Action), List), list_to_set(List, Ret).
+
+get_only_guarded(Ret) :- findall([Start, Final], (transition(Start, Final, _, Guard, _), Guard\=='null'), List), list_to_set(List, Ret).
+
+legal_events(State, L):- findall([Event, Guard], (transition(State, _, Event, Guard, _), Guard\=='null', Event\=='null'), List), list_to_set(List, L).
 
 
 
