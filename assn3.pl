@@ -157,7 +157,7 @@ is_link(Event, Guard):- transition(A,B, Event, Guard, _), A\==B.
 all_superstates(Set):- findall(Initial, superstate(Initial, _), List), list_to_set(List, Set).
 
 %% is a utility rule that succeeds by returning an ancestor to a given state.
-ancestor(Ancestor, Descendant):- superstate(Ancestor, Descendant); (superstate(X, Descendant), superstate(Ancestor,X) ).
+ancestor(Ancestor, Descendant):- superstate(Ancestor, Descendant); (superstate(X, Descendant), ancestor(Ancestor,X) ).
 
 %% succeeds by returning all transitions inherited by a given state.
 inherits_transitions(State,List):-forall(superstate(Super, State),(findall([Super,To], (transition(Super, To, _, _, _)), Lst), list_to_set(Lst, List), write(List))).
