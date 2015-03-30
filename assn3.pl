@@ -1,3 +1,6 @@
+%%Author: Jonathan Hamel, 26627900
+%%Author: Alex Dussault, 26671985
+
 %% =======================================
 %%             FACTS
 %% =======================================
@@ -21,7 +24,7 @@ state('tchk').
 state('psichk').
 state('ready').
 
-%% monitor
+%% monitoring
 
 state('monidle').
 state('regulate_environment').
@@ -37,7 +40,7 @@ state('safe_status').
 
 %% error_diagnosis
 
-state('error_rev').
+state('error_rcv').
 state('applicable_rescue').
 state('reset_module_data').
 
@@ -46,7 +49,7 @@ state('reset_module_data').
 
 initial_state('dormant').
 initial_state('boot_hw').
-initial_state('error_rev').
+initial_state('error_rcv').
 initial_state('monidle').
 initial_state('prep_purge').
 
@@ -62,18 +65,23 @@ superstate('init', 'ready').
 
 %% monitor
 
-superstate(monitor, monidle).
-superstate(monitor, lockdown).
-superstate(monitor, regulate_environment).
+superstate(monitoring, monidle).
+superstate(monitoring, lockdown).
+superstate(monitoring, 'regulate_environment').
 
 %% lockdown
 
-superstate(lockdown, 'prep purge').
+superstate(lockdown, 'prep_vpurge').
 superstate(lockdown, 'alt_temp').
 superstate(lockdown, 'alt_psi').
 superstate(lockdown, 'risk_assess').
 superstate(lockdown, 'safe_status').
 
+%% Error_diagnosis
+
+superstate('error_diagnosis', 'error_rcv').
+superstate('error_diagnosis', 'applicable_rescue').
+superstate('error_diagnosis', 'reset_module_data').
 
 %% ===transition(initial_state, final_state, event, guard, action).===
 
@@ -130,36 +138,31 @@ transition('applicable_rescue', exit, 'apply_protocol_rescue', null, null).
 %%             RULES
 %% =======================================
 
-%% Same as state_is_reflexive???
 is_loop(Event,Guard):- transition(A, A, Event, Guard, _), Event\=='null', Guard\=='null'.
 
 all_loops(Set):- findall([Event, Guard], is_loop(Event, Guard), lst), list_to_set(lst, Set).
 
-%% Same as is_link???
 is_edge(Event, Guard):- transition(_,_, Event, Guard, _).
 
-size(Length):- aggregate_all(Count, transition(_,_,_,_,_), Length).
+size(Length):- aggregate_all(Count, is_edge(_,_), Length).
 
-%% same as is_edge???
-is_link(Event, Guard):- transition(_,_, Event, Guard, _).
+is_link(Event, Guard):- transition(A,B, Event, Guard, _), A\==B.
 
 all_superstates(Set):- findall(Initial, superstate(Initial, _), List), list_to_set(List, Set).
 
-ancestor(Ancestor, Descendant):- transition(Ancestor, Descendant, _, _, _).
+ancestor(Ancestor, Descendant):- superstate(Ancestor, Descendant); (superstate(X, Descendant), superstate(Ancestor,X) ).
 
-inheritss_transitions(State,List):-findall([State, Final], (transition(State, Final, _, _, _)), Lst), list_to_set(Lst, List).
+inherits_transitions(State,List):-forall(superstate(Super, State),(findall([Super,To], (transition(Super, To, _, _, _)), Lst), list_to_set(Lst, List), write(List))).
 
 all_states(Set):- findall(Current, state(Current), List), list_to_set(List, Set).
 
 all_init_states(Set):- findall(Current, initial_state(Current), List), list_to_set(List, Set).
 
-%% Not so sure..
 get_starting_state(State):- superstate(State, Ret), initial_state(Ret), write(Ret).
 
-%%same as is_loop???
 state_is_reflexive(State):- transition(State, State, _, _, _).
 
-%% graph_is_reflexive()
+graph_is_reflexive :- forall(state(State), state_is_reflexive(State)).
 
 get_guards(Ret) :- findall(Guard, transition(_, _, _, Guard, _), List), list_to_set(List, Ret).
 
@@ -170,11 +173,6 @@ get_actions(Ret) :- findall(Action, transition(_, _, _, _, Action), List), list_
 get_only_guarded(Ret) :- findall([Start, Final], (transition(Start, Final, _, Guard, _), Guard\=='null'), List), list_to_set(List, Ret).
 
 legal_events(State, L):- findall([Event, Guard], (transition(State, _, Event, Guard, _), Guard\=='null', Event\=='null'), List), list_to_set(List, L).
-
-
-
-
-
 
 
 
