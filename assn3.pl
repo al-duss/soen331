@@ -6,26 +6,26 @@
 
 %% Overall
 
-state(dormant).
-state(init).
-state(idle).
+state('dormant').
+state('init').
+state('idle').
 state('error_diagnosis').
 state('safe_shutdown').
-state(monitoring).
+state('monitoring').
 
 %% init
 
 state('boot_hw').
-state(senchk).
-state(tchk).
-state(psichk).
-state(ready).
+state('senchk').
+state('tchk').
+state('psichk').
+state('ready').
 
 %% monitor
 
-state(monidle).
+state('monidle').
 state('regulate_environment').
-state(lockdown).
+state('lockdown').
 
 %% lockdown
 
@@ -44,21 +44,21 @@ state('reset_module_data').
 
 %% =========initial states========
 
-initial_state(dormant).
+initial_state('dormant').
 initial_state('boot_hw').
 initial_state('error_rev').
-initial_state(monidle).
+initial_state('monidle').
 initial_state('prep_purge').
 
 %% =========Superstates==========
 
 %% init
 
-superstate(init, 'boot_hw').
-superstate(init, senchk).
-superstate(init, tchk).
-superstate(init, psichk).
-superstate(init, ready).
+superstate('init', 'boot_hw').
+superstate('init', 'senchk').
+superstate('init', 'tchk').
+superstate('init', 'psichk').
+superstate('init', 'ready').
 
 %% monitor
 
@@ -91,6 +91,7 @@ transition('error_diagnosis', init, 'retry_init', 'retry < 3', 'retry++').
 transition('error_diagnosis', 'safe_shutdown', shutdown, 'retry >= 3', null).
 transition('safe_shutdown', dormant, sleep, null, null).
 transition(dormant, exit, kill, null, null).
+transition(monitoring, exit, kill, inLockdown, null).
 
 %% init
 
@@ -129,9 +130,8 @@ transition('applicable_rescue', exit, 'apply_protocol_rescue', null, null).
 %%             RULES
 %% =======================================
 
-%% is_loop(Event,Guard):- transition(A, A, Event, Guard, _), Event\=='null', Guard\=='null'.
-
-%% all_loops(Set):- findall([Event, Guard], is_loop(Event, Guard), lst), list_to_set(lst, Set).
+is_loop(Event,Guard):- transition(A, A, Event, Guard, _), Event\=='null', Guard\=='null'.
+all_loops(Set):- findall([Event, Guard], is_loop(Event, Guard), lst), list_to_set(lst, Set).
 
 %% Same as is_link???
 is_edge(Event, Guard):- transition(_,_, Event, Guard, _).
@@ -145,15 +145,16 @@ all_superstates(Set):- findall(Initial, superstate(Initial, _), List), list_to_s
 
 ancestor(Ancestor, Descendant):- transition(Ancestor, Descendant, _, _, _).
 
-%% inheritss_transitions(State,List):-
+inheritss_transitions(State,List):-findall([State, Final], (transition(State, Final, _, _, _)), Lst), list_to_set(Lst, List).
 
 all_states(Set):- findall(Current, state(Current), List), list_to_set(List, Set).
 
 all_init_states(Set):- findall(Current, initial_state(Current), List), list_to_set(List, Set).
 
-%% get_starting_state(State)
+%% Not sure about this one...
+get_starting_state(State, Ret):- superstate(State, Ret), initial_state(Ret).
 
-%% state_is_reflexive(State)
+state_is_reflexive(State):- transition(State, State, _, _, _).
 
 %% graph_is_reflexive()
 
