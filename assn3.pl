@@ -130,7 +130,9 @@ transition('applicable_rescue', exit, 'apply_protocol_rescue', null, null).
 %%             RULES
 %% =======================================
 
+%% Same as state_is_reflexive???
 is_loop(Event,Guard):- transition(A, A, Event, Guard, _), Event\=='null', Guard\=='null'.
+
 all_loops(Set):- findall([Event, Guard], is_loop(Event, Guard), lst), list_to_set(lst, Set).
 
 %% Same as is_link???
@@ -151,9 +153,10 @@ all_states(Set):- findall(Current, state(Current), List), list_to_set(List, Set)
 
 all_init_states(Set):- findall(Current, initial_state(Current), List), list_to_set(List, Set).
 
-%% Not sure about this one...
-get_starting_state(State, Ret):- superstate(State, Ret), initial_state(Ret).
+%% Not so sure..
+get_starting_state(State):- superstate(State, Ret), initial_state(Ret), write(Ret).
 
+%%same as is_loop???
 state_is_reflexive(State):- transition(State, State, _, _, _).
 
 %% graph_is_reflexive()
