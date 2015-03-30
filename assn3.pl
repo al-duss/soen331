@@ -138,40 +138,58 @@ transition('applicable_rescue', exit, 'apply_protocol_rescue', null, null).
 %%             RULES
 %% =======================================
 
+%% succeeds by finding a loop edge. We assume that an edge can be represented by a non-null event-guard pair
 is_loop(Event,Guard):- transition(A, A, Event, Guard, _), Event\=='null', Guard\=='null'.
 
+%% succeeds by returning a set of all loop edges.
 all_loops(Set):- findall([Event, Guard], is_loop(Event, Guard), lst), list_to_set(lst, Set).
 
+%% succeeds by finding an edge.
 is_edge(Event, Guard):- transition(_,_, Event, Guard, _).
 
+%%  succeeds by returning the size of the entire EFSM (given by the number of its edges).
 size(Length):- aggregate_all(Count, is_edge(_,_), Length).
 
+%% succeeds by finding a link edge.
 is_link(Event, Guard):- transition(A,B, Event, Guard, _), A\==B.
 
+%% succeeds by finding all superstates in the EFSM.
 all_superstates(Set):- findall(Initial, superstate(Initial, _), List), list_to_set(List, Set).
 
+%% is a utility rule that succeeds by returning an ancestor to a given state.
 ancestor(Ancestor, Descendant):- superstate(Ancestor, Descendant); (superstate(X, Descendant), superstate(Ancestor,X) ).
 
+%% succeeds by returning all transitions inherited by a given state.
 inherits_transitions(State,List):-forall(superstate(Super, State),(findall([Super,To], (transition(Super, To, _, _, _)), Lst), list_to_set(Lst, List), write(List))).
 
+%% succeeds by returning a list of all states
 all_states(Set):- findall(Current, state(Current), List), list_to_set(List, Set).
 
+%% succeeds by returning a list of all starting states.
 all_init_states(Set):- findall(Current, initial_state(Current), List), list_to_set(List, Set).
 
+%% succeeds by returning the top-level starting state.
 get_starting_state(State):- superstate(State, Ret), initial_state(Ret), write(Ret).
 
+%% succeeds is State is reflexive
 state_is_reflexive(State):- transition(State, State, _, _, _).
 
+%% succeeds if the entire EFSM is reflexive
 graph_is_reflexive :- forall(state(State), state_is_reflexive(State)).
 
+%% succeeds by returning a set of all guards.
 get_guards(Ret) :- findall(Guard, transition(_, _, _, Guard, _), List), list_to_set(List, Ret).
 
+%% succeeds by returning a set of all events.
 get_events(Ret) :- findall(Event, transition(_, _, Event, _, _), List), list_to_set(List, Ret).
 
+%%  succeeds by returning a set of all actions.
 get_actions(Ret) :- findall(Action, transition(_, _, _, _, Action), List), list_to_set(List, Ret).
 
+%% succeeds by returning state pairs that are associated by guards only
 get_only_guarded(Ret) :- findall([Start, Final], (transition(Start, Final, _, Guard, _), Guard\=='null'), List), list_to_set(List, Ret).
 
+%% succeeds by returning all legal event-guard pairs.
 legal_events(State, L):- findall([Event, Guard], (transition(State, _, Event, Guard, _), Guard\=='null', Event\=='null'), List), list_to_set(List, L).
 
 
